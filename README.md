@@ -1,19 +1,35 @@
-# Project Name
-Project description
+# Federal Holidays to OpCon Calendar
+This script goes out to the <a href url="https://www.federalreserve.gov/aboutthefed/k8.htm">Federal Reserve website</a>, grabs the information about the holidays and adds the dates to an OpCon calendar.  The parameters can be set here or passed in on the OpCon job.
+
+You can use traditional MSGIN functionality or the OpCon API (if you have the license).
+
+# Prerequisites
+* Powershell v5.1
+* <a href url="https://www.smatechnologies.com">OpCon Release 17+</a>
+
+# Instructions
+  * <b>OpConModule</b> - Path to the OpCon API module, if you are using the API to add the holidays
+  * <b>MSGINPath</b> - Path to the MSGIN directory on the server you are running the script, if you are using OpCon external events to add the holidays
+  * <b>URL</b> - OpCon API url
+  * <b>APIUser</b> - OpCon API user 
+  * <b>APIPassword</b> - OpCon API password
+  * <b>ExtUser</b> - External OpCon user
+  * <b>ExtPassword</b> - External OpCon user event password
+  * <b>Calendar</b> - OpCon calendar to add the holidays too
+  * <b>Option</b> - Either "api" or "msgin"
+  
+Example:
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extpassword "mypassword" -calendar "Master Holiday"
+```  
 
 # Disclaimer
 No Support and No Warranty are provided by SMA Technologies for this project and related material. The use of this project's files is on your own risk.
 
 SMA Technologies assumes no liability for damage caused by the usage of any of the files offered here via this Github repository.
 
-# Prerequisites
-
-
-# Instructions
-
-
 # License
-Copyright 2019 SMA Technologies
+Copyright 2020 SMA Technologies
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
