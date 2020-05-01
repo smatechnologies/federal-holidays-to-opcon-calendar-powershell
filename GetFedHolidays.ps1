@@ -44,7 +44,7 @@ if($option -eq "api")
         Exit 100
     }
 
-    $token = "Token " + (SMA_Login -url $url -user $apiUser -password $apiPassword).id
+    $token = "Token " + (OpCon_Login -url $url -user $apiUser -password $apiPassword).id
 }
 elseif($option -eq "msgin")
 {
@@ -108,7 +108,7 @@ for($x=0;$x -lt ($source.Count-1);$x++)
             }
             elseif($option -eq "msgin")
             {
-                "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt")
+                "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
             }
 
             $x++
