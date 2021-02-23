@@ -19,9 +19,24 @@ You can use traditional MSGIN functionality or the OpCon API (if you have the li
   * <b>Calendar</b> - OpCon calendar to add the holidays too
   * <b>Option</b> - Either "api" or "msgin"
   
-Example:
+Example MSGIN Pre OpCon20:
 ```
 powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extpassword "mypassword" -calendar "Master Holiday"
+```  
+
+Example MSGIN OpCon20 and higher:
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extToken "mytoken" -calendar "Master Holiday"
+```  
+
+Example API Pre OpCon20:
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -apiUser "myuser" -apiPassword "mypassword" -calendar "Master Holiday"
+```  
+
+Example API OpCon20 and higher:
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -extToken "mytoken" -calendar "Master Holiday"
 ```  
 
 # Disclaimer
