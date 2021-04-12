@@ -6,8 +6,7 @@ the OpCon job.
 You can use traditional MSGIN functionality or the OpCon API (if you have the license).
 
 Author: Bruce Jernell
-Version: 1.0
-
+Version: 1.1
 #>
 param(
     $opconmodule = "C:\ProgramData\OpConxps\Demo\OpCon.psm1", # Path to OpCon API function module
@@ -30,8 +29,8 @@ if($option -eq "api")
         #Verify PS version is at least 3.0
         if($PSVersionTable.PSVersion.Major -ge 3)
         {
-            # Import needed module
-            Import-Module -Name $opconmodule #-Verbose  #If you uncomment this option you will see a list of all functions      
+            #Import needed module
+            Import-Module -Name $opconmodule -Force #-Verbose  #If you uncomment this option you will see a list of all functions      
         }
         else
         {
@@ -41,9 +40,18 @@ if($option -eq "api")
     }
     else
     {
-        Write-Host "Unable to import SMA API module!"
+        Write-Host "Unable to import OpCon API module!"
         Exit 100
     }
+
+    #Force TLS 1.2
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    #Skip self signed certificates (OpCon API default)
+    if($PSVersionTable.PSVersion.Major -lt 6)
+    { OpCon_IgnoreSelfSignedCerts }
+    else
+    { OpCon_SkipCerts }
 
     if($extToken)
     { $token = "Token " + $extToken }
@@ -81,7 +89,7 @@ $resp = $req.GetResponse()
 $reqstream = $resp.GetResponseStream()
 $stream = New-Object System.IO.StreamReader $reqstream
 $result = @($stream.ReadToEnd())
-$source = $result.Split([Environment]::NewLine,[StringSplitOptions]::RemoveEmptyEntries)
+$source = $result.Split("`n",[StringSplitOptions]::RemoveEmptyEntries)
 
 # Parses through the HTML source code and extracts the dates
 for($x=0;$x -lt ($source.Count-1);$x++)
@@ -109,6 +117,12 @@ for($x=0;$x -lt ($source.Count-1);$x++)
             if($option -eq "api")
             {
                 OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
+                if($error)
+                { 
+                    Write-Host $error
+                    Write-Host "There was a problem updating calendar"$calendar" with date "$date 
+                    Exit 5
+                }
             }
             elseif($option -eq "msgin")
             {
