@@ -3,13 +3,14 @@ This script goes out to the Federal Reserve website, grabs the information about
 and adds the dates to an OpCon calendar.  The parameters can be set here or passed in on
 the OpCon job.
 
-You can use traditional MSGIN functionality or the OpCon API (if you have the license).
+You can use traditional MSGIN functionality or the OpCon API.  Also added a "debug" option
+so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.1
+Version: 1.2
 #>
 param(
-    $opconmodule = "C:\ProgramData\OpConxps\Demo\OpCon.psm1", # Path to OpCon API function module
+    $opconmodule,                                             # Path to OpCon API function module
     $msginPath = "C:\ProgramData\OpConxps\MSLSAM\MSGIN",      # Path to MS LSAM MSGIN directory
     $url,                                                     # OpCon API URL
     $apiUser,                                                 # OpCon API User
@@ -18,7 +19,7 @@ param(
     $extPassword,                                             # OpCon External Event password
     $extToken,                                                # OpCon External Token (OpCon Release 20+)
     $calendar,                                                # OpCon Calendar (ex "Master Holiday")
-    $option = "msgin"                                         # Script option, "api" or "msgin"
+    $option                                                   # Script option: "api", "msgin", "debug"
 )
 
 if($option -eq "api")
@@ -76,14 +77,14 @@ elseif($option -eq "msgin")
         Exit 102
     }    
 }
-else
+elseif($option -ne "debug")
 {
-    Write-Host 'Invalid option, must be "api" or "msgin"!'
+    Write-Host 'Invalid option, must be "api", "msgin", or "debug".'
     Exit 100
 }
 
 $months = @("January","February","March","April","May","June","July","August","September","October","November","December")
-$holidays = @("New Year*Day","Martin Luther King","Washington*Birthday","Memorial Day","Independence Day","Labor Day","Columbus Day","Veterans Day","Thanksgiving Day","Christmas Day")
+$holidays = @("New Year*Day","Martin Luther King","Washington*Birthday","Memorial Day","Juneteenth National Independence Day","Independence Day","Labor Day","Columbus Day","Veterans Day","Thanksgiving Day","Christmas Day")
 $req = [System.Net.WebRequest]::Create("https://www.federalreserve.gov/aboutthefed/k8.htm")
 $resp = $req.GetResponse()
 $reqstream = $resp.GetResponseStream()
@@ -104,16 +105,39 @@ for($x=0;$x -lt ($source.Count-1);$x++)
         $x++
         for($y=0;$y -le ($yearend-$yearstart);$y++)
         {
-            $date = ($source[$x].Substring(8,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))).Replace('*',"")
-            
-            if($date -like "*<*")
-            {
-                $date = $date.Substring(0,$date.IndexOf("<"))
-            }
+            $date = $source[$x].Substring(8,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))
 
             $year = [int]$yearstart + $y
-            $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year
-            
+            if($date -like "*<*")
+            {
+                $getStars = $date.Substring($date.IndexOf('">')+2,2)
+                $date = $date.Substring(0,$date.IndexOf("<a")) # Removes the html
+                $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + $getStars
+            }
+            elseif($date.IndexOf('*') -ge 0) 
+            { 
+                if($date.IndexOf('**') -ge 0)
+                { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "**" }
+                else 
+                { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "*" }
+            }
+            Else
+            { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year }
+
+            # Add/Subtract dates based on how the holiday falls
+            if($date.Substring($date.Length - 2) -eq "**")
+            {
+                $date = $date.Replace('**',"")
+                $date = Get-Date -Date (Get-Date -Date $date).AddDays(+1) -Format "MM/dd/yyyy"
+            }
+            elseif($date.Substring($date.Length - 2) -eq "*<" -or $date.Substring($date.Length - 1) -eq "*")
+            {
+                if($date.Substring($date.Length - 2) -eq "*<")
+                { $date = $date.Replace('*<',"") }
+                else 
+                { $date = $date.Replace('*',"") }
+            }  
+
             if($option -eq "api")
             {
                 OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
@@ -126,7 +150,15 @@ for($x=0;$x -lt ($source.Count-1);$x++)
             }
             elseif($option -eq "msgin")
             {
+                if($extToken)
+                { $extPassword = $extToken }
+
+                Write-Output ("Sending date $date to calendar $calendar via MSGIN")
                 "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
+            }
+            elseif($option -eq "debug")
+            {
+                Write-Output ("Date to add: " + $date)
             }
 
             $x++
