@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.2
+Version: 1.2.1
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
@@ -19,7 +19,7 @@ param(
     $extPassword,                                             # OpCon External Event password
     $extToken,                                                # OpCon External Token (OpCon Release 20+)
     $calendar,                                                # OpCon Calendar (ex "Master Holiday")
-    $option                                                   # Script option: "api", "msgin", "debug"
+    $option = "debug"                                                   # Script option: "api", "msgin", "debug"
 )
 
 if($option -eq "api")
@@ -105,63 +105,66 @@ for($x=0;$x -lt ($source.Count-1);$x++)
         $x++
         for($y=0;$y -le ($yearend-$yearstart);$y++)
         {
-            $date = $source[$x].Substring(8,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))
+            If($source[$x] -notlike "*div>*" -and $source[$x] -ne "")
+            {
+                $date = $source[$x].Substring(8,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))
 
-            $year = [int]$yearstart + $y
-            if($date -like "*<*")
-            {
-                $getStars = $date.Substring($date.IndexOf('">')+2,2)
-                $date = $date.Substring(0,$date.IndexOf("<a")) # Removes the html
-                $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + $getStars
-            }
-            elseif($date.IndexOf('*') -ge 0) 
-            { 
-                if($date.IndexOf('**') -ge 0)
-                { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "**" }
-                else 
-                { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "*" }
-            }
-            Else
-            { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year }
-
-            # Add/Subtract dates based on how the holiday falls
-            if($date.Substring($date.Length - 2) -eq "**")
-            {
-                $date = $date.Replace('**',"")
-                $date = Get-Date -Date (Get-Date -Date $date).AddDays(+1) -Format "MM/dd/yyyy"
-            }
-            elseif($date.Substring($date.Length - 2) -eq "*<" -or $date.Substring($date.Length - 1) -eq "*")
-            {
-                if($date.Substring($date.Length - 2) -eq "*<")
-                { $date = $date.Replace('*<',"") }
-                else 
-                { $date = $date.Replace('*',"") }
-            }  
-
-            if($option -eq "api")
-            {
-                OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
-                if($error)
-                { 
-                    Write-Host $error
-                    Write-Host "There was a problem updating calendar"$calendar" with date "$date 
-                    Exit 5
+                $year = [int]$yearstart + $y
+                if($date -like "*<*")
+                {
+                    $getStars = $date.Substring($date.IndexOf('">')+2,2)
+                    $date = $date.Substring(0,$date.IndexOf("<a")) # Removes the html
+                    $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + $getStars
                 }
-            }
-            elseif($option -eq "msgin")
-            {
-                if($extToken)
-                { $extPassword = $extToken }
+                elseif($date.IndexOf('*') -ge 0) 
+                { 
+                    if($date.IndexOf('**') -ge 0)
+                    { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "**" }
+                    else 
+                    { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "*" }
+                }
+                Else
+                { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year }
 
-                Write-Output ("Sending date $date to calendar $calendar via MSGIN")
-                "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
-            }
-            elseif($option -eq "debug")
-            {
-                Write-Output ("Date to add: " + $date)
-            }
+                # Add/Subtract dates based on how the holiday falls
+                if($date.Substring($date.Length - 2) -eq "**")
+                {
+                    $date = $date.Replace('**',"")
+                    $date = Get-Date -Date (Get-Date -Date $date).AddDays(+1) -Format "MM/dd/yyyy"
+                }
+                elseif($date.Substring($date.Length - 2) -eq "*<" -or $date.Substring($date.Length - 1) -eq "*")
+                {
+                    if($date.Substring($date.Length - 2) -eq "*<")
+                    { $date = $date.Replace('*<',"") }
+                    else 
+                    { $date = $date.Replace('*',"") }
+                }  
 
-            $x++
+                if($option -eq "api")
+                {
+                    OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
+                    if($error)
+                    { 
+                        Write-Host $error
+                        Write-Host "There was a problem updating calendar"$calendar" with date "$date 
+                        Exit 5
+                    }
+                }
+                elseif($option -eq "msgin")
+                {
+                    if($extToken)
+                    { $extPassword = $extToken }
+
+                    Write-Output ("Sending date $date to calendar $calendar via MSGIN")
+                    "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
+                }
+                elseif($option -eq "debug")
+                {
+                    Write-Output ("Date to add: " + $date)
+                }
+
+                $x++
+            }
         }  
     }
 }
