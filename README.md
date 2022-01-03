@@ -1,11 +1,11 @@
 # Federal Holidays to OpCon Calendar
-This script goes out to the <a href url="https://www.federalreserve.gov/aboutthefed/k8.htm">Federal Reserve website</a>, grabs the information about the holidays and adds the dates to an OpCon calendar.  The parameters can be set here or passed in on the OpCon job.
+This script goes out to the Federal Reserve website: <https://www.federalreserve.gov/aboutthefed/k8.htm>, grabs the information about the holidays and adds the dates to an OpCon calendar.  The parameters can be set here or passed in on the OpCon job.
 
 You can use traditional MSGIN functionality or the OpCon API.  The debug option can also be used if you are testing or wish to see the dates that are being added, without sending anything to OpCon.
 
 # Prerequisites
 * Powershell v5.1
-* <a href url="https://www.smatechnologies.com">OpCon Release 17+</a>
+* OpCon Release 17+
 
 # Instructions
   * <b>OpConModule</b> - Path to the OpCon API module, if you are using the API to add the holidays
