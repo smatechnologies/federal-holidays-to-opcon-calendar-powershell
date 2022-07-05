@@ -7,11 +7,11 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.2.1
+Version: 1.3
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
-    $msginPath = "C:\ProgramData\OpConxps\MSLSAM\MSGIN",      # Path to MS LSAM MSGIN directory
+    $msginPath,                                               # Path to MS LSAM MSGIN directory
     $url,                                                     # OpCon API URL
     $apiUser,                                                 # OpCon API User
     $apiPassword,                                             # OpCon API Password
@@ -19,8 +19,10 @@ param(
     $extPassword,                                             # OpCon External Event password
     $extToken,                                                # OpCon External Token (OpCon Release 20+)
     $calendar,                                                # OpCon Calendar (ex "Master Holiday")
-    $option = "debug"                                                   # Script option: "api", "msgin", "debug"
+    $option = "debug"                                         # Script option: "api", "msgin", "debug"
 )
+
+$ErrorActionPreference = 'Stop'
 
 if($option -eq "api")
 {
@@ -55,7 +57,12 @@ if($option -eq "api")
     { OpCon_SkipCerts }
 
     if($extToken)
-    { $token = "Token " + $extToken }
+    { 
+        if($extToken -like "Token*")
+        { $token = $extToken }
+        else
+        { $token = "Token " + $extToken }
+    }
     else
     { $token = "Token " + (OpCon_Login -url $url -user $apiUser -password $apiPassword).id }
 }
@@ -64,22 +71,22 @@ elseif($option -eq "msgin")
     if($msginPath)
     {
         if(test-path $msginPath)
-        {   Write-Host "$msginPath path exists" }
+        {   Write-Output "$msginPath path exists" }
         else
         {
-            Write-Host "$msginPath path does not exist"
+            Write-Output "$msginPath path does not exist"
             Exit 101
         }
     }
     else
     {
-        Write-Host "MSGIN Path parameter must be specified!"
+        Write-Output "MSGIN Path parameter must be specified!"
         Exit 102
     }    
 }
 elseif($option -ne "debug")
 {
-    Write-Host 'Invalid option, must be "api", "msgin", or "debug".'
+    Write-Output 'Invalid option, must be "api", "msgin", or "debug".'
     Exit 100
 }
 
@@ -97,8 +104,8 @@ for($x=0;$x -lt ($source.Count-1);$x++)
 {
     if($source[$x] -like "*Holidays Observed by the Federal Reserve System*")
     {
-        $yearstart = $source[$x].Substring(66,4)
-        $yearend = $source[$x].Substring(71,4)
+        $yearstart = $source[$x].Substring(58,4)
+        $yearend = $source[$x].Substring(63,4)
     }
     elseif($holidays | ForEach-Object{ if($source[$x] -like "*" + $_ + "*"){ return $true }})
     {
@@ -107,10 +114,10 @@ for($x=0;$x -lt ($source.Count-1);$x++)
         {
             If($source[$x] -notlike "*div>*" -and $source[$x] -ne "")
             {
-                $date = $source[$x].Substring(8,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))
+                $date = $source[$x].Substring(7,$source[$x].IndexOf("</td>")-($source[$x].IndexOf("<td>")+4))
 
                 $year = [int]$yearstart + $y
-                if($date -like "*<*")
+                if($date.indexof('>*') -ge 0)   # Formerly ($date -like "*<*")
                 {
                     $getStars = $date.Substring($date.IndexOf('">')+2,2)
                     $date = $date.Substring(0,$date.IndexOf("<a")) # Removes the html
@@ -118,49 +125,54 @@ for($x=0;$x -lt ($source.Count-1);$x++)
                 }
                 elseif($date.IndexOf('*') -ge 0) 
                 { 
-                    if($date.IndexOf('**') -ge 0)
+                    if($date.IndexOf('***') -ge 0)
+                    { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year }
+                    elseif($date.IndexOf('**') -ge 0)
                     { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "**" }
                     else 
                     { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + "*" }
                 }
                 Else
                 { $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year }
-
+                
                 # Add/Subtract dates based on how the holiday falls
                 if($date.Substring($date.Length - 2) -eq "**")
                 {
                     $date = $date.Replace('**',"")
                     $date = Get-Date -Date (Get-Date -Date $date).AddDays(+1) -Format "MM/dd/yyyy"
                 }
+                elseif($date.IndexOf("***") -ge 0) 
+                { $date = $date.Replace('***',"") } 
                 elseif($date.Substring($date.Length - 2) -eq "*<" -or $date.Substring($date.Length - 1) -eq "*")
                 {
                     if($date.Substring($date.Length - 2) -eq "*<")
                     { $date = $date.Replace('*<',"") }
                     else 
                     { $date = $date.Replace('*',"") }
-                }  
+                }
 
-                if($option -eq "api")
+                Write-Output ("Date to add: " + $date)
+
+                if($option -ne "debug")
                 {
-                    OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
-                    if($error)
-                    { 
-                        Write-Host $error
-                        Write-Host "There was a problem updating calendar"$calendar" with date "$date 
-                        Exit 5
+                    if($option -eq "api")
+                    {   
+                        OpCon_UpdateCalendar -url $url -token $token -name $calendar -date $date
+                        if($error)
+                        { 
+                            Write-Output $error
+                            Write-Output "There was a problem updating calendar "$calendar" with date "$date 
+                            Exit 5
+                        }
                     }
-                }
-                elseif($option -eq "msgin")
-                {
-                    if($extToken)
-                    { $extPassword = $extToken }
+                    elseif($option -eq "msgin")
+                    {
+                        if($extToken)
+                        { $extPassword = $extToken }
 
-                    Write-Output ("Sending date $date to calendar $calendar via MSGIN")
-                    "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
-                }
-                elseif($option -eq "debug")
-                {
-                    Write-Output ("Date to add: " + $date)
+                        Write-Output ("Sending date $date to calendar $calendar via MSGIN")
+                        "`$CALENDAR:ADD,$calendar,$date,$extUser,$extPassword" | Out-File -FilePath ($msginPath + "\events$x.txt") -Encoding ascii
+                    }
                 }
 
                 $x++
