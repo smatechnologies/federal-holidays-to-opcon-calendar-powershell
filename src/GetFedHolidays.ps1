@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.3
+Version: 1.31
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
@@ -151,6 +151,7 @@ for($x=0;$x -lt ($source.Count-1);$x++)
                     { $date = $date.Replace('*',"") }
                 }
 
+                $date = (Get-Date -date $date -Format "M/d/yyyy")
                 Write-Output ("Date to add: " + $date)
 
                 if($option -ne "debug")
