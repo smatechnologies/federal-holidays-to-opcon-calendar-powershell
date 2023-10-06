@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.31
+Version: 1.32
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
@@ -119,7 +119,9 @@ for($x=0;$x -lt ($source.Count-1);$x++)
                 $year = [int]$yearstart + $y
                 if($date.indexof('>*') -ge 0)   # Formerly ($date -like "*<*")
                 {
-                    $getStars = $date.Substring($date.IndexOf('">')+2,2)
+                    # Match asterisks at end of string
+                    # Version 1.32 Bug fix for January **
+                    $getStars = ($date | Select-String -Pattern '[*]' -AllMatches).Matches.Value -join ''
                     $date = $date.Substring(0,$date.IndexOf("<a")) # Removes the html
                     $date = [string]($months.IndexOf($date.SubString(0,$date.IndexOf(" ")))+1) + "/" + [string]$date.SubString(($date.IndexOf(" ")+1),($date.Length - ($date.IndexOf(" ")+1))) + "/" + [string]$year + $getStars
                 }
