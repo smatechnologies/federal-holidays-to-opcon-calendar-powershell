@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.32
+Version: 1.33
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
@@ -23,6 +23,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+#Force TLS 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 if($option -eq "api")
 {
@@ -46,9 +49,6 @@ if($option -eq "api")
         Write-Host "Unable to import OpCon API module!"
         Exit 100
     }
-
-    #Force TLS 1.2
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     #Skip self signed certificates (OpCon API default)
     if($PSVersionTable.PSVersion.Major -lt 6)
