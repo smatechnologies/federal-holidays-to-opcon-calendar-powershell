@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.33
+Version: 1.4
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
@@ -92,11 +92,7 @@ elseif($option -ne "debug")
 
 $months = @("January","February","March","April","May","June","July","August","September","October","November","December")
 $holidays = @("New Year*Day","Martin Luther King","Washington*Birthday","Memorial Day","Juneteenth National Independence Day","Independence Day","Labor Day","Columbus Day","Veterans Day","Thanksgiving Day","Christmas Day")
-$req = [System.Net.WebRequest]::Create("https://www.federalreserve.gov/aboutthefed/k8.htm")
-$resp = $req.GetResponse()
-$reqstream = $resp.GetResponseStream()
-$stream = New-Object System.IO.StreamReader $reqstream
-$result = @($stream.ReadToEnd())
+$result = (Invoke-WebRequest -Uri "https://www.federalreserve.gov/aboutthefed/k8.htm").Content
 $source = $result.Split("`n",[StringSplitOptions]::RemoveEmptyEntries)
 
 # Parses through the HTML source code and extracts the dates
