@@ -7,7 +7,7 @@ You can use traditional MSGIN functionality or the OpCon API.  Also added a "deb
 so that you can view the dates that will be added.
 
 Author: Bruce Jernell
-Version: 1.4
+Version: 1.5
 #>
 param(
     $opconmodule,                                             # Path to OpCon API function module
