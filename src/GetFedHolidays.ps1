@@ -24,47 +24,50 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-#Force TLS 1.2
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#Force TLS 1.2/1.3
+if($PSVersionTable.PSVersion.Major -le 5)
+{
+    Write-Output "The Federal Holiday script for OpCon now only supports Powershell version 6+"
+    Write-Output 'Check your PowerShell version or update your OpCon script runner to something like: pwsh.exe -ExecutionPolicy Bypass -File $FILE $ARGUMENTS'
+    Exit 99
+}
+elseif($PSVersionTable.PSVersion.Major -eq 6 -or ($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -lt 1))
+{ 
+    Write-Output "Using TLS 1.2"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
+else 
+{ 
+    Write-Output "Using TLS 1.3"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls13 
+}
 
 if($option -eq "api")
 {
     #Verifies opcon module exists and is imported
     if(Test-Path $opconmodule)
     {
-        #Verify PS version is at least 3.0
-        if($PSVersionTable.PSVersion.Major -ge 3)
-        {
-            #Import needed module
-            Import-Module -Name $opconmodule -Force #-Verbose  #If you uncomment this option you will see a list of all functions      
+        #Import needed module
+        Import-Module -Name $opconmodule -Force #-Verbose  #If you uncomment this option you will see a list of all functions
+
+        #Skip self signed certificates (OpCon API default)
+        OpCon_SkipCerts
+
+        if($extToken)
+        { 
+            if($extToken -like "Token*")
+            { $token = $extToken }
+            else
+            { $token = "Token " + $extToken }
         }
         else
-        {
-            Write-Host "Powershell version needs to be 3.0 or higher!"
-            Exit 100
-        }
+        { $token = "Token " + (OpCon_Login -url $url -user $apiUser -password $apiPassword).id }
     }
     else
     {
         Write-Host "Unable to import OpCon API module!"
         Exit 100
     }
-
-    #Skip self signed certificates (OpCon API default)
-    if($PSVersionTable.PSVersion.Major -lt 6)
-    { OpCon_IgnoreSelfSignedCerts }
-    else
-    { OpCon_SkipCerts }
-
-    if($extToken)
-    { 
-        if($extToken -like "Token*")
-        { $token = $extToken }
-        else
-        { $token = "Token " + $extToken }
-    }
-    else
-    { $token = "Token " + (OpCon_Login -url $url -user $apiUser -password $apiPassword).id }
 }
 elseif($option -eq "msgin")
 {
@@ -92,7 +95,7 @@ elseif($option -ne "debug")
 
 $months = @("January","February","March","April","May","June","July","August","September","October","November","December")
 $holidays = @("New Year*Day","Martin Luther King","Washington*Birthday","Memorial Day","Juneteenth National Independence Day","Independence Day","Labor Day","Columbus Day","Veterans Day","Thanksgiving Day","Christmas Day")
-$result = (Invoke-WebRequest -Uri "https://www.federalreserve.gov/aboutthefed/k8.htm").Content
+$result = Invoke-RestMethod -Uri "https://www.federalreserve.gov/aboutthefed/k8.htm"
 $source = $result.Split("`n",[StringSplitOptions]::RemoveEmptyEntries)
 
 # Parses through the HTML source code and extracts the dates
