@@ -4,7 +4,7 @@ This script goes out to the Federal Reserve website: <https://www.federalreserve
 You can use traditional MSGIN functionality or the OpCon API.  The debug option can also be used if you are testing or wish to see the dates that are being added, without sending anything to OpCon.
 
 # Prerequisites
-* Powershell v5.1
+* Powershell v6+
 * OpCon Release 17+
 
 # Instructions
@@ -21,22 +21,22 @@ You can use traditional MSGIN functionality or the OpCon API.  The debug option 
   
 Example MSGIN Pre OpCon20:
 ```
-powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extpassword "mypassword" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extpassword "mypassword" -calendar "Master Holiday"
 ```  
 
 Example MSGIN OpCon20 and higher:
 ```
-powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extToken "mytoken" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgin" -msginPath "C:\ProgramData\OpConxps\MSLSAM\MSGIN" -extuser "myuser" -extToken "mytoken" -calendar "Master Holiday"
 ```  
 
 Example API Pre OpCon20:
 ```
-powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -apiUser "myuser" -apiPassword "mypassword" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -apiUser "myuser" -apiPassword "mypassword" -calendar "Master Holiday"
 ```  
 
 Example API OpCon20 and higher:
 ```
-powershell.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -extToken "mytoken" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -extToken "mytoken" -calendar "Master Holiday"
 ```  
 
 # Disclaimer
@@ -45,7 +45,7 @@ No Support and No Warranty are provided by SMA Technologies for this project and
 SMA Technologies assumes no liability for damage caused by the usage of any of the files offered here via this Github repository.
 
 # License
-Copyright 2020 SMA Technologies
+Copyright 2024 SMA Technologies
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
