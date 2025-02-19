@@ -4,11 +4,11 @@ This script goes out to the Federal Reserve website: <https://www.federalreserve
 You can use traditional MSGIN functionality or the OpCon API.  The debug option can also be used if you are testing or wish to see the dates that are being added, without sending anything to OpCon.
 
 # Prerequisites
-* Powershell v6+
+* Powershell v5+
 * OpCon Release 17+
 
 # Instructions
-  * <b>OpConModule</b> - Path to the OpCon API module, if you are using the API to add the holidays
+  * <b>OpConModule</b> - Path to the OpCon API module, if you are using the API to add the holidays (No longer requried as of 1.6)
   * <b>MSGINPath</b> - Path to the MSGIN directory on the server you are running the script, if you are using OpCon external events to add the holidays
   * <b>URL</b> - OpCon API url
   * <b>APIUser</b> - OpCon API user 
@@ -31,12 +31,12 @@ pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "msgi
 
 Example API Pre OpCon20:
 ```
-pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -apiUser "myuser" -apiPassword "mypassword" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -url "hostname:Port" -apiUser "myuser" -apiPassword "mypassword" -calendar "Master Holiday"
 ```  
 
 Example API OpCon20 and higher:
 ```
-pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -opconmodule "[[apiPath]]" -url "hostname:Port" -extToken "mytoken" -calendar "Master Holiday"
+pwsh.exe -ExecutionPolicy Bypass -File "C:\SMA_GetFedHolidays.ps1" -option "api" -url "hostname:Port" -extToken "mytoken" -calendar "Master Holiday"
 ```  
 
 # Disclaimer
